@@ -33,40 +33,6 @@
     };
 
     /**
-     * Binary search to match a media query
-     * @return {Number}
-     * @private
-     */
-    var binarySearch = function (property, unit, matchMedia, a, b, maxIter) {
-        var mid = (a + b) / 2;
-        if (maxIter <= 0 || b - a < epsilon) {
-            return mid;
-        }
-        var query = "(" + property + ":" + mid + unit + ")";
-        if (matchMedia(query).matches) {
-            return binarySearch(mid, b, maxIter - 1);
-        } else {
-            return binarySearch(a, mid, maxIter - 1);
-        }
-    };
-
-    /**
-     * Linear search to match a media query
-     * @return {Number}
-     * @private
-     */
-    var linearSearch = function (property, unit, matchMedia, a, b) {
-        for (var i = a; i < b; i++) {
-            var query = "(" + property + ":" + i + unit + ")";
-            if (matchMedia(query).matches) {
-                return i;
-            }
-        }
-
-        return null;
-    };
-
-    /**
      * Fallback function to set default values
      * @return {Object}
      * @private
@@ -198,13 +164,13 @@
 
     /**
      * Use a search function to match a media query
-     * @param searchFunction
-     * @param property
-     * @param unit
-     * @param a
-     * @param b
-     * @param maxIter
-     * @param epsilon
+     * @param searchFunction: The search function to call
+     * @param property: The media property to match against
+     * @param unit: The CSS unit of the property (e.g. px)
+     * @param a: The lower bound of the search
+     * @param b: The upper bound of the search
+     * @param maxIter: The maximum number of iterations
+     * @param epsilon: The max step size
      * @return {Number}
      * @private
      */
@@ -233,7 +199,7 @@
         }
 
         // Call search function
-        var result = searchFunction(property, unit, matchMedia, a, b, maxIter);
+        var result = searchFunction(property, unit, matchMedia, a, b, maxIter, epsilon);
 
         // Cleanup if necessary
         if (div) {
@@ -242,6 +208,49 @@
         }
 
         return result;
+    }
+
+    /**
+     * Binary search to match a media query
+     * @param property: Media property to test
+     * @param unit: CSS unit for the property (e.g. px)
+     * @param matchMedia: The matchMedia function to use
+     * @param a: The lower bound of the binary search
+     * @param b: The upper bound of the binary search
+     * @param maxIter: The maximum number of iterations
+     * @return {Number}
+     * @private
+     */
+    function binarySearch (property, unit, matchMedia, a, b, maxIter, epsilon) {
+        var mid = (a + b) / 2;
+        if (maxIter <= 0 || b - a < epsilon) {
+            return mid;
+        }
+        var query = "(" + property + ":" + mid + unit + ")";
+        if (matchMedia(query).matches) {
+            return binarySearch(property, unit, matchMedia, mid, b, maxIter - 1, epsilon);
+        } else {
+            return binarySearch(property, unit, matchMedia, a, mid, maxIter - 1, epsilon);
+        }
+    }
+
+    /**
+     * Linear search to match a media query
+     * @param property: Media property to test
+     * @param unit: CSS unit for the property (e.g. px)
+     * @param matchMedia: The matchMedia function to use
+     * @param a: The lower bound of the linear search
+     * @param b: The upper bound of the linear search
+     * @return {Number}
+     * @private
+     */
+    function linearSearch (property, unit, matchMedia, a, b) {
+        for (var i = a; i < b; i++) {
+            var query = "(" + property + ":" + i + unit + ")";
+            if (matchMedia(query).matches) {
+                return i;
+            }
+        }
     }
 
     /**

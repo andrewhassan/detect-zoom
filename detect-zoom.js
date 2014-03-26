@@ -73,7 +73,7 @@
 
     /**
      * Mobile WebKit
-     * Use CSS media selec
+     * Use CSS media query
      * @return {Object}
      * @private
      */

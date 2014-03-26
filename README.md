@@ -11,4 +11,4 @@ Please see the `README` at http://tombigel.github.io/detect-zoom/ for full detai
 License
 ------
 
-Detect-zoom is dual-licensed under the [WTFPL](http://www.wtfpl.net/about/) and [MIT](http://opensource.org/licenses/MIT) license, at the recipient's choice.
+Detect-zoom is dual-licensed under the [MIT](http://opensource.org/licenses/MIT) license, at the recipient's choice.

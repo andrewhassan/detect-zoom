@@ -33,6 +33,40 @@
     };
 
     /**
+     * Binary search to match a media query
+     * @return {Number}
+     * @private
+     */
+    var binarySearch = function (property, unit, matchMedia, a, b, maxIter) {
+        var mid = (a + b) / 2;
+        if (maxIter <= 0 || b - a < epsilon) {
+            return mid;
+        }
+        var query = "(" + property + ":" + mid + unit + ")";
+        if (matchMedia(query).matches) {
+            return binarySearch(mid, b, maxIter - 1);
+        } else {
+            return binarySearch(a, mid, maxIter - 1);
+        }
+    };
+
+    /**
+     * Linear search to match a media query
+     * @return {Number}
+     * @private
+     */
+    var linearSearch = function (property, unit, matchMedia, a, b) {
+        for (var i = a; i < b; i++) {
+            var query = "(" + property + ":" + i + unit + ")";
+            if (matchMedia(query).matches) {
+                return i;
+            }
+        }
+
+        return null;
+    };
+
+    /**
      * Fallback function to set default values
      * @return {Object}
      * @private
@@ -73,15 +107,15 @@
 
     /**
      * Mobile WebKit
-     * the trick: window.innerWIdth is in CSS pixels, while
-     * screen.width and screen.height are in system pixels.
-     * And there are no scrollbars to mess up the measurement.
+     * Use CSS media selec
      * @return {Object}
      * @private
      */
     var webkitMobile = function () {
-        var deviceWidth = (Math.abs(window.orientation) == 90) ? screen.height : screen.width;
-        var zoom = deviceWidth / window.innerWidth;
+        var screenWidth = mediaQuerySearch(linearSearch, 'max-width', 'px', 1, 5000, 1);
+        var viewportWidth = window.innerWidth;
+
+        var zoom = Math.round(100 * screenWidth / viewportWidth) / 100;
         return {
             zoom: zoom,
             devicePxPerCssPx: devicePixelRatio()
@@ -121,7 +155,7 @@
      * @private
      */
     var firefox4 = function () {
-        var zoom = mediaQueryBinarySearch('min--moz-device-pixel-ratio', '', 0, 10, 20, 0.0001);
+        var zoom = mediaQuerySearch(binarySearch, 'min--moz-device-pixel-ratio', '', 0, 10, 20, 0.0001);
         zoom = Math.round(zoom * 100) / 100;
         return {
             zoom: zoom,
@@ -163,7 +197,8 @@
     };
 
     /**
-     * Use a binary search through media queries to find zoom level in Firefox
+     * Use a search function to match a media query
+     * @param searchFunction
      * @param property
      * @param unit
      * @param a
@@ -173,7 +208,8 @@
      * @return {Number}
      * @private
      */
-    var mediaQueryBinarySearch = function (property, unit, a, b, maxIter, epsilon) {
+    function mediaQuerySearch (searchFunction, property, unit, a, b, maxIter, epsilon) {
+        // Set up matchMedia function
         var matchMedia;
         var head, style, div;
         if (window.matchMedia) {
@@ -195,26 +231,18 @@
                 return {matches: matched};
             };
         }
-        var ratio = binarySearch(a, b, maxIter);
+
+        // Call search function
+        var result = searchFunction(property, unit, matchMedia, a, b, maxIter);
+
+        // Cleanup if necessary
         if (div) {
             head.removeChild(style);
             document.body.removeChild(div);
         }
-        return ratio;
 
-        function binarySearch(a, b, maxIter) {
-            var mid = (a + b) / 2;
-            if (maxIter <= 0 || b - a < epsilon) {
-                return mid;
-            }
-            var query = "(" + property + ":" + mid + unit + ")";
-            if (matchMedia(query).matches) {
-                return binarySearch(mid, b, maxIter - 1);
-            } else {
-                return binarySearch(a, mid, maxIter - 1);
-            }
-        }
-    };
+        return result;
+    }
 
     /**
      * Generate detection function
